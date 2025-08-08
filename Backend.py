@@ -4,8 +4,8 @@ import requests
 app = Flask(__name__)
 
 # OpenAI API settings
-API_KEY = "sk-M88-x4LYKj7IhMTjsbYvOSb3r7fP6dfbUM9M-Pk4V9T3BlbkFJRRWV6ETfe5HETUZIuC_7OzSG3eikdZ_CnjT4H1yvQA"  # Replace with your actual API key
-API_URL = "https://api.openai.com/v1/chat/completions"
+API_KEY = "-----"  # Replace with your actual API key
+API_URL = "-----" # Replace with your URL
 
 # Global variables
 temperature = 0.5
