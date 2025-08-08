@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
+    <style>
+        /* Styles for app container */
+        body { font-family: Arial, sans-serif; background-color: #f0f0f0; margin: 0; padding: 0; }
+
+        /* New container for the whole application */
+        #app-container {
+            width: 420px;
+            height: 780px;
+            margin: 20px auto;
+            padding: 5px;
+            border: 5px solid black; /* Black border around the whole application */
+            box-sizing: border-box;
+            border-radius: 10px; /* Optional: Add slight rounding to the corners */
+            background-color: #f0f0f0;
+        }
+
+        /* Chat app styles */
+        #chat-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Buffer area at the top */
+        #buffer {
+            height: 60px;
+            background-color: #6e668d;
+            border: 5px solid #8b8a9c; /* Slightly brighter border */
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom-left-radius: 15px; /* Add a slight curve to the bottom left */
+            border-bottom-right-radius: 15px; /* Add a slight curve to the bottom right */
+        }
+
+        /* Centered circular button */
+        .circle-button {
+            width: 50px;
+            height: 50px;
+            background-color: #b0baff;
+            border: 2px solid #c4c8e0; /* Slightly brighter border */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #220b4f;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        #chat-area {
+            overflow-y: auto; /* Enable scrolling */
+            padding: 10px;
+            padding-top: 0px; /* Extra padding at the top to ensure messages don't reach the pink buffer */
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            max-height: 520px; /* Restrict chat area to below the pink buffer */
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hide scrollbar */
+        #chat-area::-webkit-scrollbar {
+            width: 0; /* Hide scrollbar for WebKit browsers */
+        }
+
+        #chat-area {
+            -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+            scrollbar-width: none;  /* Hide scrollbar for Firefox */
+        }
+
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 45%; /* Allow messages to use the full width */
+            word-wrap: break-word;
+            display: inline-block;
+        }
+        .user {
+            background-color: #6f678e;
+            border: 2px solid #8a859d; /* Slightly brighter border */
+            align-self: flex-end;
+            text-align: left;
+        }
+        .bot {
+            background-color: #d0ccfe;
+            border: 2px solid #e0d9fe; /* Slightly brighter border */
+            align-self: flex-start;
+            text-align: left;
+            color: black; /* Change text color to black */
+        }
+
+        /* Updated input area */
+        #input-area {
+            position: absolute;
+            bottom: 40px;
+            left: 55px;
+            width: 280px;
+            height: 50px;
+            background-color: #d0ccfe;
+            border: 2px solid #e0d9fe; /* Slightly brighter border */
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            z-index: 2;
+        }
+
+        #message-input {
+            height: 40px;
+            border: none;
+            outline: none;
+            padding-left: 10px;
+            background-color: #d0ccfe;
+            font-size: 16px;
+            color: #220b4f;
+        }
+
+        #send-button {
+            margin-left: 10px;
+            background-color: #b0baff;
+            border: 2px solid #c4c8e0; /* Slightly brighter border */
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 600px;
+            left: 0;
+            width: 396px;
+            height: 200px;
+            background-color: #8644ff;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            border: 2px solid #9a5fd0; /* Slightly brighter border */
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+        <div id="chat-container">
+            <div id="buffer">
+                <div class="circle-button" onclick="goToParamPage()">Param</div>
+            </div>
+
+            <div style="position: absolute; top: 0px; left: 0px; width: 412px; height: 769px; background-color: #220b4f;"></div>
+            <div id="chat-area"></div>
+            <div class="overlay"></div>
+
+            <div id="input-area">
+                <input type="text" id="message-input" placeholder="Type your message..." />
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const chatArea = document.getElementById('chat-area');
+    const sessionId = sessionStorage.getItem('sessionId') || (() => {
+        const id = Math.random().toString(36).substr(2, 9); // Generate unique session ID
+        sessionStorage.setItem('sessionId', id);
+        return id;
+    })();
+
+    const savedMessages = JSON.parse(localStorage.getItem(`chatMessages_${sessionId}`)) || [];
+
+    // Display saved messages for this session
+    savedMessages.forEach(message => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${message.sender}`;
+        messageDiv.innerHTML = message.text.replace(/\n/g, '<br>'); // Properly format line breaks
+        chatArea.appendChild(messageDiv);
+    });
+
+    chatArea.scrollTop = chatArea.scrollHeight;
+
+    // Add welcome message if no saved messages exist
+    if (savedMessages.length === 0) {
+        const welcomeMessageDiv = document.createElement('div');
+        welcomeMessageDiv.id = 'starting-message';
+        welcomeMessageDiv.className = 'message bot';
+        welcomeMessageDiv.innerHTML = `
+            <strong>Welcome!</strong> Here's how the application works:
+            <p>An <strong>Application Programming Interface (API)</strong> is a set of rules and protocols that allow different applications to communicate with each other. In this model, we use OpenAI’s API, a cloud-based service that enables us to develop advanced AI models to perform a range of natural language processing tasks.</p>
+            <p>We have developed a user-friendly front-end interface that allows users to interact with the model. The user interface (UI) is designed to be intuitive: users can scroll through their previous conversations with the AI and interact with the AI using the text bar at the bottom.</p>
+            <p>Once the user inputs their message, the model generates a response. Below this response, the model displays a second message explaining the parameter values used to generate the response.</p>
+            <p>The user can also click the button at the top of the page to navigate to a parameter settings page for further customization.</p>
+        `;
+        chatArea.appendChild(welcomeMessageDiv);
+    }
+});
+
+function goToParamPage() {
+    window.location.href = '/ParamPage';
+}
+
+document.getElementById('send-button').addEventListener('click', function() {
+    const input = document.getElementById('message-input');
+    const messageText = input.value.trim();
+    const sessionId = sessionStorage.getItem('sessionId');
+
+    if (messageText) {
+        const chatArea = document.getElementById('chat-area');
+
+        // Remove starting message if present
+        const startingMessage = document.getElementById('starting-message');
+        if (startingMessage) startingMessage.remove();
+
+        // Display and save user message
+        displayMessage(messageText, 'user');
+        saveMessage(messageText, 'user', sessionId);
+
+        // Clear input field
+        input.value = '';
+
+        // Display temporary bot response
+        const botMessageDiv = document.createElement('div');
+        botMessageDiv.className = 'message bot';
+        botMessageDiv.textContent = "Looking for a response...";
+        chatArea.appendChild(botMessageDiv);
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        // Send message to backend
+        setTimeout(() => {
+            fetch('/send-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: messageText, session_id: sessionId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove temporary response
+                botMessageDiv.remove();
+
+                // Display all responses from the backend
+                data.responses.forEach((response, index) => {
+                    const botResponseText = `Response ${index + 1}:\n${response}`;
+                    displayMessage(botResponseText, 'bot');
+                    saveMessage(botResponseText, 'bot', sessionId);
+                });
+
+                // Display API payload details if provided
+                if (data.payload) {
+                    const payloadText = `
+                        The data used by the API:
+                        <br><strong>Inputted Message:</strong> ${data.payload.messages[0].content}
+                        <br><strong>Temperature:</strong> ${data.payload.temperature}
+                        <br><strong>Number of Outputs:</strong> ${data.payload.n}
+                        <br><strong>Max Tokens:</strong> ${data.payload.max_tokens}
+                    `;
+                    console.log(payloadText);
+                    displayMessage(payloadText, 'bot');
+                    saveMessage(payloadText, 'bot', sessionId);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                botMessageDiv.textContent = "Error getting response";
+            });
+        }, 1000);
+    }
+});
+
+function displayMessage(text, sender) {
+    const chatArea = document.getElementById('chat-area');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${sender}`;
+    messageDiv.innerHTML = text.replace(/\n/g, '<br>'); // Properly format line breaks
+    chatArea.appendChild(messageDiv);
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function saveMessage(text, sender, sessionId) {
+    if (text !== 'Welcome! Type your message to start chatting!') {
+        const savedMessages = JSON.parse(localStorage.getItem(`chatMessages_${sessionId}`)) || [];
+        savedMessages.push({ text, sender });
+        localStorage.setItem(`chatMessages_${sessionId}`, JSON.stringify(savedMessages));
+    }
+}
+
+// Allow sending message with Enter key
+document.getElementById('message-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('send-button').click();
+    }
+});
+</script>
+
+
+
+</body>
+</html>

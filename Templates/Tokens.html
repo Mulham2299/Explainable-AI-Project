@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tokens</title>
+    <style>
+        /* Outer container */
+        #app-container {
+            width: 420px;
+            height: 780px;
+            margin: 20px auto;
+            padding: 5px;
+            border: 2px solid black;
+            box-sizing: border-box;
+            border-radius: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Inner screen area */
+        #screen {
+            width: 100%;
+            height: 100%;
+            background-color: #220b4f;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Centered paramContainer box */
+        #paramContainer {
+            width: 80%;
+            height: 80%;
+            background-color: #8644ff;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            flex-direction: column;
+        }
+
+        /* Circle at the top of paramContainer */
+        #param-circle {
+            width: 100px;
+            height: 100px;
+            background-color: #c4c8e0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #220b4f;
+            font-weight: bold;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Customizable text box below the circle */
+        #custom-text-box {
+    background-color: #d1d5db;
+    color: #220b4f;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: centre;
+    font-size: 16px;
+    margin-bottom: 10px;
+    margin-top: 100px;
+    width: 95%;
+    box-sizing: border-box;
+}
+
+        /* Home button styling */
+        #home-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #b0baff;
+            border: 2px solid #c4c8e0;
+            border-radius: 8px;
+            color: #220b4f;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        #home-button:hover {
+            background-color: #a3b2ff;
+        }
+
+        /* Input and submit button styles */
+        #integer-container {
+            text-align: center;
+        }
+
+        #number_of_tokens {
+            width: 60%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        #submit-button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #b0baff;
+            border: none;
+            border-radius: 5px;
+            color: #220b4f;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #submit-button:active {
+            background-color: #a3b2ff;
+        }
+
+        /* Green flash effect */
+        #submit-button.flash-green {
+            background-color: #00ff00 !important;
+        }
+
+        /* Box to display current max tokens */
+        #max-tokens-box {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #d1d5db;
+            color: #220b4f;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div id="screen">
+            <div id="paramContainer">
+                <div id="param-circle">Tokens</div>
+                <div id="custom-text-box">
+Tokens are word pieces; they are basic units of text that a language model can process. Small words may equal one token but longer words like compounds may be multiple, running for example may be broken down into ‘run’ and ‘ning’.
+
+Therefore, a smaller max_tokens will create a shorter response, and a higher max_tokens allow the space for a longer response and more detail. This feature is context-dependent.
+
+A small value is accurate for concise answers, whereas a higher value is useful for longer detailed responses.  </div>
+
+                <div id="integer-container">
+                    <input type="text" id="number_of_tokens" placeholder="Enter an integer">
+                    <button id="submit-button" onclick="submitValue()">Submit</button>
+                </div>
+
+                <!-- Box to display the current number of max tokens -->
+                <div id="max-tokens-box">
+                    Current Max Tokens: <span id="current-tokens">Loading...</span>
+                </div>
+            </div>
+
+            <a href="/ParamPage" id="home-button">Go Back</a>
+        </div>
+    </div>
+
+    <script>
+        // Fetch the current number_of_tokens from the backend on page load
+        window.onload = function() {
+            fetch('/get-number-of-tokens')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('current-tokens').textContent = data.number_of_tokens;
+                })
+                .catch(error => {
+                    console.error('Error fetching current tokens:', error);
+                    document.getElementById('current-tokens').textContent = 'Error loading';
+                });
+        };
+
+        function submitValue() {
+            const inputElement = document.getElementById('number_of_tokens');
+            const submitButton = document.getElementById('submit-button');
+            const currentTokensElement = document.getElementById('current-tokens');
+
+            const value = inputElement.value;
+            if (!Number.isInteger(Number(value)) || value.trim() === "") {
+                alert('Please enter a valid integer!');
+                return;
+            }
+
+            // Send the value to the backend
+            fetch('/update-integer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ value: value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+
+
+                    // Flash green effect
+                    submitButton.classList.add('flash-green');
+                    setTimeout(() => {
+                        submitButton.classList.remove('flash-green');
+                    }, 300); // Flash for 300ms
+
+                    // Update the current tokens display
+                    currentTokensElement.textContent = data.number_of_tokens;
+                } else {
+                    console.error("Error updating value:", data.message);
+                }
+
+                inputElement.value = '';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Handle Enter key press
+        document.getElementById('number_of_tokens').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                submitValue();
+            }
+        });
+    </script>
+</body>
+</html>

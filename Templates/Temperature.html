@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperature</title>
+    <style>
+        /* Outer container */
+        #app-container {
+            width: 420px;
+            height: 780px;
+            margin: 20px auto;
+            padding: 5px;
+            border: 2px solid black;
+            box-sizing: border-box;
+            border-radius: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Inner screen area */
+        #screen {
+            width: 100%;
+            height: 100%;
+            background-color: #220b4f;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Centered paramContainer box */
+        #paramContainer {
+            width: 80%;
+            height: 80%;
+            background-color: #8644ff;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Circle at the top of paramContainer */
+        #param-circle {
+            width: 100px;
+            height: 100px;
+            background-color: #c4c8e0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #220b4f;
+            font-weight: bold;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Customizable text box below the circle */
+        #custom-text-box {
+            background-color: #d1d5db;
+            color: #220b4f;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            position: absolute;
+            top: 150px; /* Position it below the circle */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            box-sizing: border-box;
+        }
+
+        /* Home button styling */
+        #home-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #b0baff;
+            border: 2px solid #c4c8e0;
+            border-radius: 8px;
+            color: #220b4f;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        #slider-container {
+            margin-top: 350px;
+            text-align: center;
+        }
+
+        /* Style the slider */
+        #slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 80%;
+            height: 8px;
+            border-radius: 5px;
+            background-color: #ddd;
+            outline: none;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        #slider:hover {
+            opacity: 1;
+        }
+
+        /* Customize the slider thumb */
+        #slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background-color: #220b4f;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Display slider value below the slider */
+        #slider-value {
+            display: block;
+            margin-top: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #220b4f;
+        }
+
+        /* Status box */
+        #status-box {
+            width: 80%;
+            margin: 5px auto;
+            padding: 5px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            color: white;
+            background-color: #66b2ff;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div id="screen">
+            <div id="paramContainer">
+                <div id="param-circle">Temperature</div>
+                <div id="custom-text-box">The temperature parameter determines how random the model will behave. Usually, this is set between 0-1. For example, if the temperature was set low to 0.2 the model would be more focused and more predictable, it would choose words and tokens that are more likely. Therefore, a low temperature would be good for information or instructions. </div>
+
+                <div id="slider-container">
+                    <label for="slider">Adjust Temperature:</label>
+                    <input type="range" id="slider" min="0" max="1.5" step="0.01" value="0.5">
+                    <span id="slider-value">0.50</span>
+
+                    <div id="status-box">Value is 0.5 or greater, The model can be seen to be more creative and random and could return some unexpected responses. This feature could become useful if the user was asking for some sort of fiction to be created.</div>
+                </div>
+            </div>
+
+            <a href="/ParamPage" id="home-button">Go Back</a>
+        </div>
+    </div>
+
+    <script>
+        const slider = document.getElementById("slider");
+        const sliderValue = document.getElementById("slider-value");
+        const statusBox = document.getElementById("status-box");
+
+        // Function to update the UI based on slider value
+        function updateUI(value) {
+            sliderValue.textContent = parseFloat(value).toFixed(2);
+
+            if (value < 0.5) {
+                statusBox.textContent = "Value is less than 0.5, The model will be more focused and more predictable, it would choose words and tokens that are more likely. Therefore, a low temperature would be good for information or instructions. ";
+                statusBox.style.backgroundColor = "#ff6666";
+            } else if (value >= 0.5 && value < 1) {
+                statusBox.textContent = "Value is 0.5 or greater, The model can be seen to be more creative and random and could return some unexpected responses. This feature could become useful if the user was asking for some sort of fiction to be created.";
+                statusBox.style.backgroundColor = "#66b2ff";
+            } else {
+                statusBox.textContent = "Value is 1 or greater, A very high temperature is where the temperature is over 1.0, which can typically produce some noncontextual responses. That can be highly experimental and quite often wrong. ";
+                statusBox.style.backgroundColor = "#00c04b";
+            }
+        }
+
+        // Fetch the initial temperature value from the backend
+        window.onload = function() {
+            fetch('/get-temperature')
+                .then(response => response.json())
+                .then(data => {
+                    const temperature = parseFloat(data.temperature);
+                    slider.value = temperature;
+                    updateUI(temperature);
+                })
+                .catch(error => console.error("Error fetching temperature:", error));
+        };
+
+        // Handle slider input
+        slider.addEventListener("input", function() {
+            const value = parseFloat(slider.value);
+            updateUI(value);
+
+            // Send updated value to the backend
+            fetch('/slider-valueP1-1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: value })
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+</body>
+</html>

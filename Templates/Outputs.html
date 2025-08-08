@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parameter Page 2</title>
+
+    <style>
+        /* Outer container */
+        #app-container {
+            width: 420px;
+            height: 780px;
+            margin: 20px auto;
+            padding: 5px;
+            border: 5px solid black;
+            box-sizing: border-box;
+            border-radius: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Inner screen area */
+        #screen {
+            width: 100%;
+            height: 100%;
+            background-color: #220b4f;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Centered paramContainer box */
+        #paramContainer {
+            width: 80%;
+            height: 80%;
+            background-color: #8644ff;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Circle at the top of paramContainer */
+        #param-circle {
+            width: 100px;
+            height: 100px;
+            background-color: #c4c8e0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #220b4f;
+            font-weight: bold;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Customizable text box below the circle */
+        #custom-text-box {
+            background-color: #d1d5db;
+            color: #220b4f;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            position: absolute;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: auto;
+            box-sizing: border-box;
+        }
+
+        /* Counter container */
+        #counter-container {
+            margin-top: 200px; /* Adjust to position correctly */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Counter buttons */
+        .counter-button {
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            background-color: #b0baff;
+            color: #220b4f;
+            cursor: pointer;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .counter-button:hover {
+            background-color: #a3b2ff;
+        }
+
+        /* Counter display */
+        #counter-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            width: 40px;
+            text-align: center;
+        }
+
+        /* Home button styling */
+        #home-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #b0baff;
+            border: 2px solid #c4c8e0;
+            border-radius: 8px;
+            color: #220b4f;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        #home-button:hover {
+            background-color: #a3b2ff;
+        }
+
+        /* Status box to show output message */
+        #status-box {
+            width: 80%;
+            margin: 20px auto;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            color: white;
+            background-color: #66b2ff;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div id="screen">
+            <div id="paramContainer">
+                <div id="param-circle">Number of Outputs</div>
+                <div id="custom-text-box">The n parameter determines how many responses the model can generate. If n is equal to 1 the model will generate one response but if it is equal to 3 the model may generate more than 1 response but no more than 3. This depends on how restrictive the temperature may be or how low the max_tokens is set to. </div>
+
+                <!-- Counter container -->
+                <div id="counter-container">
+                    <button id="decrement-button" class="counter-button">−</button>
+                    <span id="counter-value">3</span>
+                    <button id="increment-button" class="counter-button">+</button>
+                </div>
+
+                <!-- Status box -->
+                <div id="status-box">Outputs set to 3</div>
+            </div>
+
+            <a href="/ParamPage" id="home-button">Back</a>
+        </div>
+    </div>
+
+    <script>
+        const incrementButton = document.getElementById("increment-button");
+        const decrementButton = document.getElementById("decrement-button");
+        const counterValue = document.getElementById("counter-value");
+        const statusBox = document.getElementById("status-box");
+
+        let counter = 3;  // Initial counter value (default value)
+
+        // Fetch the initial counter value from the backend
+        function fetchInitialCounterValue() {
+            fetch('/get-num_outputs')  // Endpoint to fetch num_outputs
+                .then(response => response.json())
+                .then(data => {
+                    counter = data.num_outputs || 3;  // Set the counter value from the backend
+                    counterValue.textContent = counter;  // Set the initial counter value in the UI
+                    statusBox.textContent = `Outputs set to ${counter}`;  // Set the status box message
+                })
+                .catch(error => console.error("Error fetching initial counter value:", error));
+        }
+
+        // Function to update the backend with the counter value
+        function sendCounterValueToBackend(value) {
+            fetch('/slider-valueP2-2', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: value }) // Send the counter value as JSON
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Backend updated successfully:", data);
+                statusBox.textContent = `Outputs set to ${value}`;  // Update the status box with the new value
+            })
+            .catch(error => console.error("Error updating backend:", error));
+        }
+
+        // Function to update the counter value in the UI and backend
+        function updateCounter() {
+            counterValue.textContent = counter; // Update the UI with the new counter value
+            sendCounterValueToBackend(counter); // Send the updated value to the backend
+        }
+
+        // Increment counter
+        incrementButton.addEventListener("click", () => {
+            if (counter < 5) {  // Ensure counter doesn't exceed the max value of 5
+                counter++;
+                updateCounter();
+            }
+        });
+
+        // Decrement counter
+        decrementButton.addEventListener("click", () => {
+            if (counter > 1) {  // Ensure counter doesn't go below the min value of 1
+                counter--;
+                updateCounter();
+            }
+        });
+
+        // Fetch the initial counter value when the page loads
+        document.addEventListener("DOMContentLoaded", fetchInitialCounterValue);
+    </script>
+</body>
+</html>
